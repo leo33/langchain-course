@@ -33,6 +33,7 @@ def main():
     llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
     chain = summary_prompt_template | llm
     response = chain.invoke({"information": information})
+    
     print(response.content)
 
 
