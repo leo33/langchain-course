@@ -1,40 +1,29 @@
 import os
 
 from dotenv import load_dotenv
-from langchain_core.prompts import PromptTemplate
+from langchain_classic import hub
+from langchain_classic.agents import AgentExecutor
+from langchain_classic.agents.react.agent import create_react_agent
 from langchain_openai import ChatOpenAI
-
+from langchain_tavily import TavilySearch
 
 load_dotenv()
 
 
+tools = [ TavilySearch(TAVLILY_API_KEY=os.getenv("TAVILY_API_KEY")) ]
+llm = ChatOpenAI(temperature=0, model="gpt-4")
+react_prompt = hub.pull("hwchase17/react")
+agent = create_react_agent(llm, tools, prompt=react_prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+chain = agent_executor
+
 def main():
-    information = """
-    Elon Reeve Musk (* 28. Juni 1971 in Pretoria, Südafrika) ist ein südafrikanisch-kanadisch-US-amerikanischer Unternehmer und Milliardär. 
-    Er wurde als Gründer und technischer Leiter des PayPal-Vorgängers X.com und des Raumfahrtunternehmens SpaceX sowie als Leiter und Mitinhaber des Elektroautoherstellers Tesla bekannt. 
-    Darüber hinaus gründete er weitere Unternehmen und hält seit 2022 eine Mehrheitsbeteiligung an dem Mikrobloggingdienst X (vormals Twitter).
-    Musk verfügt über ein Vermögen von etwa 500 Milliarden US-Dollar und ist damit der reichste Mensch der Welt. Mit seiner finanziellen und medialen Macht 
-    beeinflusst er in erheblichem Ausmaß den öffentlichen politischen Diskurs weltweit. 
-    Er vertritt libertäre Ansichten und (seit 2022) vorwiegend politisch rechte Standpunkte. 
-    Neben seinen Aktivitäten in den Vereinigten Staaten unterstützt er rechtspopulistische und 
-    rechtsextreme Parteien in Europa und Südamerika. Durch seine Beiträge auf X wurde er auch 
-    für das Verbreiten von Verschwörungstheorien und für provokante Äußerungen bekannt, 
-    die unter anderem als wissenschaftlich unhaltbar, rassistisch und frauenfeindlich kritisiert wurden.
-    """
-    
-    summary_template = """
-    given the information {information} about a person I want to create: 
-    1. a short summary of max 50 words
-    2. two interesting facts about the person
-    """
-
-    summary_prompt_template = PromptTemplate.from_template(summary_template)
-
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
-    chain = summary_prompt_template | llm
-    response = chain.invoke({"information": information})
-    
-    print(response.content)
+    result = chain.invoke(
+        input={
+            "input": "Search for 3 job postings for an ai engineer using langchain in the bay area on linkedin and list their details",
+        }
+    )   
+    print(result)
 
 
 
